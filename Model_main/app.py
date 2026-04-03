@@ -113,5 +113,5 @@ if __name__ == "__main__":
 from flask import Flask
 app = Flask(__name__)
 
-# cd "E:\---\supervise_ML\Loan Eligibility Checker\Model_main" 
+# cd "E:\---\supervise_ML\Loan Eligibility Checker" \Model_main" 
 # py -m uvicorn app:app --reload
