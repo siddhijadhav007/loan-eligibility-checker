@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Loan Eligibility Checker</title>
+  <script src="/_sdk/element_sdk.js"></script>
+  <style>
+    body {
+      box-sizing: border-box;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      width: 100%;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #ffffff;
+      color: #1a202c;
+      overflow-x: hidden;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    .app-wrapper {
+      min-height: 100%;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .container {
+      flex: 1;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 40px 20px;
+      width: 100%;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+      opacity: 0;
+      animation: fadeInUp 300ms ease-out forwards;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .logo {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 16px;
+    }
+
+    .title {
+      font-size: 28px;
+      font-weight: 700;
+      color: #1a202c;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      font-size: 16px;
+      color: #718096;
+      font-weight: 400;
+    }
+
+    .form-card {
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 10px 15px rgba(0, 0, 0, 0.03);
+      padding: 32px;
+      opacity: 0;
+      animation: fadeInUp 300ms ease-out 150ms forwards;
+    }
+
+    .form-group {
+      margin-bottom: 24px;
+      opacity: 0;
+      animation: fadeInUp 300ms ease-out forwards;
+    }
+
+    .form-group:nth-child(1) { animation-delay: 250ms; }
+    .form-group:nth-child(2) { animation-delay: 300ms; }
+    .form-group:nth-child(3) { animation-delay: 350ms; }
+    .form-group:nth-child(4) { animation-delay: 400ms; }
+    .form-group:nth-child(5) { animation-delay: 450ms; }
+    .form-group:nth-child(6) { animation-delay: 500ms; }
+    .form-group:nth-child(7) { animation-delay: 550ms; }
+    .form-group:nth-child(8) { animation-delay: 600ms; }
+
+    .form-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      color: #2d3748;
+      margin-bottom: 8px;
+    }
+
+    .form-input,
+    .form-select {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 16px;
+      font-family: inherit;
+      background: #ffffff;
+      color: #1a202c;
+      transition: border-color 200ms ease, box-shadow 200ms ease;
+      outline: none;
+    }
+
+    .form-input:focus,
+    .form-select:focus {
+      border-color: #3182ce;
+      box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+    }
+
+    .form-input::placeholder {
+      color: #a0aec0;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 12px;
+      margin-top: 32px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 14px 24px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 200ms ease;
+      border: none;
+      font-family: inherit;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: #3182ce;
+      color: #ffffff;
+      box-shadow: 0 2px 4px rgba(49, 130, 206, 0.2);
+    }
+
+    .btn-primary:not(:disabled):hover {
+      background: #2c5aa0;
+      transform: scale(1.02);
+      box-shadow: 0 4px 8px rgba(49, 130, 206, 0.3);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: #3182ce;
+      border: 2px solid #3182ce;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(49, 130, 206, 0.05);
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #ffffff;
+      border-radius: 50%;
+      animation: spin 600ms linear infinite;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .result-container {
+      margin-top: 24px;
+      padding: 24px;
+      border-radius: 12px;
+      display: none;
+      opacity: 0;
+      transform: scale(0.98);
+      transition: all 300ms ease;
+    }
+
+    .result-container.show {
+      display: block;
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .result-approved {
+      background: #f0fdf4;
+      border: 2px solid #86efac;
+    }
+
+    .result-rejected {
+      background: #fef2f2;
+      border: 2px solid #fca5a5;
+    }
+
+    .result-icon {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 16px;
+    }
+
+    .result-text {
+      text-align: center;
+      font-size: 16px;
+      font-weight: 600;
+      color: #1a202c;
+    }
+
+    .toast {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-100px);
+      background: #ef4444;
+      color: #ffffff;
+      padding: 16px 24px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      opacity: 0;
+      transition: all 300ms ease;
+      z-index: 1000;
+      max-width: 90%;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .footer {
+      text-align: center;
+      padding: 24px 20px;
+      border-top: 1px solid #e2e8f0;
+      margin-top: auto;
+      opacity: 0;
+      animation: fadeInUp 300ms ease-out 700ms forwards;
+    }
+
+    .footer-text {
+      font-size: 14px;
+      color: #718096;
+    }
+
+    .form-loading {
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    @media (max-width: 640px) {
+      .container {
+        padding: 24px 16px;
+      }
+
+      .form-card {
+        padding: 24px;
+      }
+
+      .title {
+        font-size: 24px;
+      }
+
+      .button-group {
+        flex-direction: column;
+      }
+
+      .btn {
+        width: 100%;
+      }
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+  <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
+ </head>
+ <body>
+  <div class="app-wrapper">
+   <div class="container">
+    <header class="header">
+     <svg class="logo" viewbox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="48" rx="12" fill="#3182ce" /> <path d="M16 30V18L24 14L32 18V30L24 34L16 30Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /> <path d="M24 24V34" stroke="white" stroke-width="2" stroke-linecap="round" /> <path d="M16 18L24 24L32 18" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+     </svg>
+     <h1 class="title" id="page-title">Loan Eligibility Checker</h1>
+     <p class="subtitle" id="page-subtitle">Check your loan approval status in seconds</p>
+    </header>
+    <main>
+     <div class="form-card">
+      <form id="loan-form">
+       <div class="form-group"><label for="married" class="form-label">Marital Status</label> <select id="married" class="form-select" required> <option value="">Select marital status</option> <option value="1">Yes</option> <option value="0">No</option> </select>
+       </div>
+       <div class="form-group"><label for="education" class="form-label">Education</label> <select id="education" class="form-select" required> <option value="">Select education level</option> <option value="1">Graduate</option> <option value="0">Not Graduate</option> </select>
+       </div>
+       <div class="form-group"><label for="self-employed" class="form-label">Self Employed</label> <select id="self-employed" class="form-select" required> <option value="">Select employment status</option> <option value="1">Yes</option> <option value="0">No</option> </select>
+       </div>
+       <div class="form-group"><label for="applicant-income" class="form-label">Applicant Income</label> <input type="number" id="applicant-income" class="form-input" placeholder="Enter applicant income" required min="0" step="1">
+       </div>
+       <div class="form-group"><label for="coapplicant-income" class="form-label">Co-applicant Income</label> <input type="number" id="coapplicant-income" class="form-input" placeholder="Enter co-applicant income" required min="0" step="1">
+       </div>
+       <div class="form-group"><label for="loan-amount" class="form-label">Loan Amount</label> <input type="number" id="loan-amount" class="form-input" placeholder="Enter loan amount" required min="0" step="1">
+       </div>
+       <div class="form-group"><label for="credit-history" class="form-label">Credit History</label> <select id="credit-history" class="form-select" required> <option value="">Select credit history</option> <option value="1">Good</option> <option value="0">Bad</option> </select>
+       </div>
+       <div class="form-group"><label for="property-area" class="form-label">Property Area</label> <select id="property-area" class="form-select" required> <option value="">Select property area</option> <option value="0">Rural</option> <option value="1">Semiurban</option> <option value="2">Urban</option> </select>
+       </div>
+       <div class="button-group"><button type="submit" class="btn btn-primary" id="submit-btn"> <span id="submit-text">Check Loan Eligibility</span> </button> <button type="button" class="btn btn-secondary" id="reset-btn">Reset</button>
+       </div>
+      </form>
+      <div id="result" class="result-container">
+       <svg class="result-icon" id="result-icon" viewbox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"></svg>
+       <p class="result-text" id="result-text"></p>
+      </div>
+     </div>
+    </main>
+   </div>
+   <footer class="footer">
+    <p class="footer-text" id="footer-text">AI-based loan eligibility checker for demo purposes only.</p>
+   </footer>
+  </div>
+  <div id="toast" class="toast"></div>
+<script>
+  const defaultConfig = {
+    approved_message: "Congratulations! Your loan is likely to be approved.",
+    rejected_message: "Based on the information provided, the loan may not be approved.",
+    submit_button_text: "Check Loan Eligibility"
+  };
+
+  const form = document.getElementById('loan-form');
+  const submitBtn = document.getElementById('submit-btn');
+  const submitText = document.getElementById('submit-text');
+  const resetBtn = document.getElementById('reset-btn');
+  const resultContainer = document.getElementById('result');
+  const resultIcon = document.getElementById('result-icon');
+  const resultText = document.getElementById('result-text');
+  const formCard = document.querySelector('.form-card');
+  const toast = document.getElementById('toast');
+
+  function showToast(message) {
+    toast.textContent = message;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3000);
+  }
+
+  function showResult(isApproved) {
+    resultContainer.classList.remove('result-approved', 'result-rejected');
+
+    if (isApproved) {
+      resultContainer.classList.add('result-approved');
+      resultIcon.innerHTML =
+        '<circle cx="24" cy="24" r="22" fill="#22c55e"/>' +
+        '<path d="M16 24l6 6 12-12" stroke="white" stroke-width="3"/>';
+      resultText.textContent = defaultConfig.approved_message;
+    } else {
+      resultContainer.classList.add('result-rejected');
+      resultIcon.innerHTML =
+        '<circle cx="24" cy="24" r="22" fill="#ef4444"/>' +
+        '<path d="M24 16v12M24 32v2" stroke="white" stroke-width="3"/>';
+      resultText.textContent = defaultConfig.rejected_message;
+    }
+
+    resultContainer.classList.add('show');
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    // ✅ SAFE validation (NO JS error)
+    if (
+      !document.getElementById('married').value ||
+      !document.getElementById('education').value ||
+      !document.getElementById('self-employed').value ||
+      !document.getElementById('credit-history').value ||
+      !document.getElementById('property-area').value
+    ) {
+      showToast("Please fill all required fields");
+      return;
+    }
+
+    const propertyAreaMap = {
+      "0": "Rural",
+      "1": "Semiurban",
+      "2": "Urban"
+    };
+
+    const formData = {
+      Married: document.getElementById('married').value === "1" ? "Yes" : "No",
+      Education: document.getElementById('education').value === "1" ? "Graduate" : "Not Graduate",
+      Self_Employed: document.getElementById('self-employed').value === "1" ? "Yes" : "No",
+      ApplicantIncome: Number(document.getElementById('applicant-income').value),
+      CoapplicantIncome: Number(document.getElementById('coapplicant-income').value),
+      LoanAmount: Number(document.getElementById('loan-amount').value),
+      Credit_History: document.getElementById('credit-history').value === "1" ? "Good" : "Bad",
+      Property_Area: propertyAreaMap[
+        document.getElementById('property-area').value
+      ]
+    };
+
+    submitBtn.disabled = true;
+    submitText.innerHTML = '<span class="spinner"></span>Processing...';
+    formCard.classList.add('form-loading');
+    resultContainer.classList.remove('show');
+
+    try {
+      const response = await fetch("http://127.0.0.1:8000/predict", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData)
+      });
+
+      if (!response.ok) throw new Error("API error");
+
+      const result = await response.json();
+      console.log("API RESULT:", result);
+      // ✅ FINAL CORRECT DECISION (PRODUCTION SAFE)
+      const isApproved = result.approval_probability >= 60;
+      showResult(isApproved);
+
+    } catch (err) {
+      console.error(err);
+      showToast("Unable to connect to server. Please try again.");
+    } finally {
+      submitBtn.disabled = false;
+      submitText.textContent = defaultConfig.submit_button_text;
+      formCard.classList.remove('form-loading');
+    }
+  });
+
+  resetBtn.addEventListener('click', () => {
+    form.reset();
+    resultContainer.classList.remove('show');
+  });
+</script>
+
+
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9b0dae8da6958b03',t:'MTc2NjIxODQyMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
